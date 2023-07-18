@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Page</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    /* Center the image */
+    .center-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">Home</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- Add Book Button -->
+  <div class="container mt-4">
+    <button type="button" class="btn btn-primary add-button" data-bs-toggle="modal" data-bs-target="#addBookModal">
+      Add Book
+    </button>
+    <!-- Add Book Modal -->
+    <div class="modal fade" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addBookModalLabel">Add Book</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addBookForm" method="post">
+              <!-- Book fields for creating a new book -->
+              <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="naslov">
+              </div>
+              <div class="mb-3">
+                <label for="description" class="form-label">Desctiption</label>
+                <input type="text" class="form-control" id="description" name="description">
+              </div>
+
+              <div class="mb-3">
+                <label for="genre" class="form-label">Genre</label>
+                <input type="text" class="form-control" id="genre" name="zanr">
+              </div>
+              <div class="mb-3">
+                <label for="year" class="form-label">Year</label>
+                <input type="number" class="form-control" id="year" name="godina">
+              </div>
+
+
+              <button type="submit" class="btn btn-primary">Add Book</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Centered Image -->
+    <div id="main" style="text-align: center;">
+
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="detailsModalLabel">Movie Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul class="list-group">
+              <li class="list-group-item"><b>Id:</b> <span id="modalId"></span></li>
+
+              <li class="list-group-item"><b>Title:</b> <span id="modalTitle"></span></li>
+              <li class="list-group-item"><b>Year:</b> <span id="modalYear"></span></li>
+              <li class="list-group-item"><b>Genre:</b> <span id="modalGenre"></span></li>
+              <li class="list-group-item"><b>Description:</b> <span id="modalDescription"></span></li>
+              <li class="list-group-item"><b>Added By:</b> <span id="modalAddedBy"></span></li>
+            </ul>
+          </div>
+          <!-- "Add review" button -->
+          <button type="button" class="btn btn-primary mt-3" onclick="showReviewForm()">Add review</button>
+
+          <!-- Review form (hidden by default) -->
+          <div id="reviewForm" style="display: none;">
+            <h5>Add a Review</h5>
+            <form id="addReviewForm" style="margin: 0 1em;">
+              <input type="hidden" id="movieId" name="movieId" value="">
+              <div class="mb-3">
+                <label for="reviewTitle" class="form-label">Title</label>
+                <input type="text" class="form-control" id="reviewTitle" name="reviewTitle" required>
+              </div>
+              <div class="mb-3">
+                <label for="reviewText" class="form-label">Review</label>
+                <textarea class="form-control" id="reviewText" name="reviewText" rows="3" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="reviewStars" class="form-label">Stars</label>
+                <input type="number" class="form-control" id="reviewStars" name="reviewStars" min="1" max="5" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Check if token is present in local storage
+    var token = localStorage.getItem('token');
+    if (!token) {
+      // Redirect to login.html
+      window.location.href = 'login.html';
+    }
+    $(document).ready(function () {
+      $.ajax({
+        url: 'http://localhost:8000/movies/',
+        headers: { "Authorization": localStorage.getItem("token") },
+        type: 'GET',
+
+        success: function (response) {
+          var tableBody = $('#main');
+          for (i = 0; i < response.length; i++) {
+            console.log(response[i])
+            div = '<div class="card" style="width: 18rem; margin-top: 1em;" data-id="' + response[i].id + '>\
+                <img class="card-img-top" src="https://fakeimg.pl/50x50" alt="Card image cap">\
+                <div class="card-body">\
+                  <h5 class="card-title">'+ response[i].title + '</h5>\
+                  <p class="card-text">'+ response[i].description + '</p>\
+                  <span><i> Year:'+ response[i].year + '</i></span><br>\
+                  <button class="btn btn-primary details" onclick="getDetails('+ response[i].id + ')">Read details</button>\
+                </div></div></div>'
+            tableBody.append(div)
+          }
+
+        }
+      })
+
+      // Click event handler for "Read details" button
+    })
+    function getDetails(id) {
+      var url = 'http://localhost:8000/movie/' + id + '/';
+
+      $.ajax({
+        url: url,
+        headers: { "Authorization": localStorage.getItem("token") },
+        type: 'GET',
+
+        success: function (response) {
+          $('#modalId').text(response.id);
+          $('#modalTitle').text(response.title);
+          $('#modalYear').text(response.year);
+          $('#modalGenre').text(response.genre);
+          $('#modalDescription').text(response.description);
+          $('#modalAddedBy').text(response.added_by.username);
+
+          $.ajax({
+            url: 'http://localhost:8000/reviews/' + id + '/',
+            headers: { "Authorization": localStorage.getItem("token") },
+            type: 'GET',
+
+            success: function (response) {
+              console.log(response)
+              // Create a new element to hold the reviews
+              var reviewsContainer = $('<div>');
+
+              // Loop through the reviews and append them to the reviews container
+              for (var i = 0; i < response.length; i++) {
+                var review = response[i];
+                var reviewItem = $('<div class="review-item">');
+                reviewItem.html('<b class="review-title">Title:</b> ' + review.title + '<br>' +
+                  '<b class="review-text">Review:</b> ' + review.review + '<br>' +
+                  '<b>Stars:</b> ' + review.star_numbers + '<br><br>');
+                reviewsContainer.append(reviewItem);
+              }
+
+              // Append the reviews container to the modal body
+              $('#detailsModal .modal-body').append(reviewsContainer);
+
+
+              // Open the modal
+              $('#detailsModal').modal('show');
+            }
+          })
+
+          // Open the modal
+          $('#detailsModal').modal('show');
+        },
+
+        error: function (xhr, textStatus, errorThrown) {
+          console.log('Error:', errorThrown);
+          // TODO: Handle the error gracefully
+        }
+      });
+    }
+    function showReviewForm() {
+      $('#reviewForm').show();
+    }
+
+    $('#addReviewForm').submit(function (event) {
+      event.preventDefault();
+
+      // Get the form data
+      var formData = {
+        movie: parseInt($('#modalId').text()),
+        title: $('#reviewTitle').val(),
+        review: $('#reviewText').val(),
+        star_numbers: parseInt($('#reviewStars').val()),
+      };
+      console.log(formData)
+      // Perform the AJAX request to submit the review
+      $.ajax({
+        url: 'http://localhost:8000/reviews/', // Adjust the URL accordingly
+        headers: { "Authorization": localStorage.getItem("token"), "Content-Type": "application/json" },
+        type: 'POST',
+        data: JSON.stringify(formData),
+
+        success: function (response) {
+          // Clear the form fields
+          $('#reviewTitle').val('');
+          $('#reviewText').val('');
+          $('#reviewStars').val('');
+
+          // Optionally, you can update the UI with the new review
+          // For example, you can append the new review to the reviews container
+
+          // Hide the review form
+          $('#reviewForm').hide();
+
+          // Show a success message or perform any other desired action
+          alert('Review submitted successfully!');
+        }
+      })
+    })
+
+    $('#addBookForm').submit(function (event) {
+      event.preventDefault();
+
+      // Get the form data
+      var formData = {
+        
+        title: $('#title').val(),
+        description:$("#description").val(),
+        genre: $("#genre").val(),
+        year: parseInt($('#year').val()),
+        star_numbers: 0,
+        num_reviews:0
+      };
+      console.log(formData)
+      // Perform the AJAX request to submit the review
+      $.ajax({
+        url: 'http://localhost:8000/movies/', // Adjust the URL accordingly
+        headers: { "Authorization": localStorage.getItem("token"), "Content-Type": "application/json" },
+        type: 'POST',
+        data: JSON.stringify(formData),
+
+        success: function (response) {
+          // Clear the form fields
+          $('#reviewTitle').val('');
+          $('#reviewText').val('');
+          $('#reviewStars').val('');
+
+          // Optionally, you can update the UI with the new review
+          // For example, you can append the new review to the reviews container
+
+          // Hide the review form
+          $('#reviewForm').hide();
+
+          // Show a success message or perform any other desired action
+          alert('Review submitted successfully!');
+        }
+      })
+    })
+  </script>
+  <style>
+    .review-item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #f9f9f9;
+    }
+
+    .review-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .review-text {
+      margin-bottom: 10px;
+    }
+
+    .review-stars {
+      color: #FFD700;
+    }
+
+    .review-user {
+      font-style: italic;
+    }
+  </style>
+</body>
+
+</html>
